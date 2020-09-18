@@ -28,20 +28,20 @@ type DemoSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Demo. Edit Demo_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Replicas is the number of replicas to run
+	Replicas int `json:"replicas,omitempty"`
 }
 
 // DemoStatus defines the observed state of Demo
 type DemoStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Nodes string `json:"nodes"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
 // Demo is the Schema for the demoes API
+// +kubebuilder:subresource:status
 type Demo struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
