@@ -61,7 +61,7 @@ func main() {
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
 		Namespace:          "multicloud-k8s-demo-operator-system",
-		LeaderElectionID:   "12ae17dd.my.domain",
+		LeaderElectionID:   "12ae17dd.quercy.co",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

@@ -1,4 +1,4 @@
-apiVersion: skittles.my.domain/v1
+apiVersion: skittles.quercy.co/v1
 kind: Demo
 metadata:
   name: demo-sample

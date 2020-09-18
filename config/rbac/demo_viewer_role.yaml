@@ -5,7 +5,7 @@ metadata:
   name: demo-viewer-role
 rules:
 - apiGroups:
-  - skittles.my.domain
+  - skittles.quercy.co
   resources:
   - demoes
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - skittles.my.domain
+  - skittles.quercy.co
   resources:
   - demoes/status
   verbs:

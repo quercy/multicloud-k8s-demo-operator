@@ -1,4 +1,4 @@
-domain: my.domain
+domain: quercy.co
 layout: go.kubebuilder.io/v2
 projectName: multicloud-k8s-demo-operator
 repo: github.com/quercy/multicloud-k8s-demo-operator/v2

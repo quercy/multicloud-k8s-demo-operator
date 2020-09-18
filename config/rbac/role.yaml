@@ -8,7 +8,7 @@ metadata:
   namespace: multicloud-k8s-demo-operator-system
 rules:
 - apiGroups:
-  - skittles.my.domain
+  - skittles.quercy.co
   resources:
   - demoes
   verbs:
@@ -20,7 +20,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - skittles.my.domain
+  - skittles.quercy.co
   resources:
   - demoes/status
   verbs:
