@@ -1,0 +1,7 @@
+apiVersion: skittles.quercy.co/v1
+kind: Presto
+metadata:
+  name: presto-sample
+spec:
+  # Add fields here
+  foo: bar

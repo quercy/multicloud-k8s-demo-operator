@@ -6,6 +6,9 @@ resources:
 - group: skittles
   kind: Demo
   version: v1
+- group: skittles
+  kind: Presto
+  version: v1
 version: 3-alpha
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}
