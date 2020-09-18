@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quercy/multicloud-k8s-demo-operator
-  newTag: v4
+  newTag: v5

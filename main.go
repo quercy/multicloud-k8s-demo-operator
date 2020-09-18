@@ -60,6 +60,7 @@ func main() {
 		MetricsBindAddress: metricsAddr,
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
+		Namespace:          "multicloud-k8s-demo-operator-system",
 		LeaderElectionID:   "12ae17dd.my.domain",
 	})
 	if err != nil {

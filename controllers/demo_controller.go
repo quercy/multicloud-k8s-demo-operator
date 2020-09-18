@@ -34,8 +34,8 @@ type DemoReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=skittles.my.domain,resources=demoes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=skittles.my.domain,resources=demoes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=skittles.my.domain,namespace=multicloud-k8s-demo-operator-system,resources=demoes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=skittles.my.domain,namespace=multicloud-k8s-demo-operator-system,resources=demoes/status,verbs=get;update;patch
 
 func (r *DemoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
