@@ -28,13 +28,14 @@ type PrestoSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Workers          int        `json:"workers"`
-	Node             PrestoNode `json:"node"`
-	LogLevel         string     `json:"logLevel"`
-	MaxMemory        string     `json:"maxMemory"`
-	MaxMemoryPerNode string     `json:"maxMemoryPerNode"`
-	JvmConfig        JvmConfig  `json:"jvmConfig"`
-	Image            Image      `json:"image"`
+	Workers          int32        `json:"workers"`
+	Node             PrestoNode   `json:"node"`
+	Config           PrestoConfig `json:"config"`
+	LogLevel         string       `json:"logLevel"`
+	MaxMemory        string       `json:"maxMemory"`
+	MaxMemoryPerNode string       `json:"maxMemoryPerNode"`
+	JvmConfig        JvmConfig    `json:"jvmConfig"`
+	Image            Image        `json:"image"`
 }
 
 // Image defines the Presto image to pull
@@ -61,7 +62,7 @@ type PrestoNode struct {
 // PrestoConfig defines the Presto config
 type PrestoConfig struct {
 	Path     string `json:"path"`
-	HTTPPort string `json:"httpPort"`
+	HTTPPort int32  `json:"httpPort"`
 }
 
 // JvmConfig configures the JVM

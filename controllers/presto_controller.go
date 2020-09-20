@@ -20,6 +20,9 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,4 +53,44 @@ func (r *PrestoReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&skittlesv1.Presto{}).
 		Complete(r)
+}
+
+func getPrestoLabels(name string) map[string]string {
+	return map[string]string{"app": "presto", "presto_cr": name}
+}
+
+func (r *PrestoReconciler) deployPresto(p *skittlesv1.Presto) *appsv1.Deployment {
+	ls := getPrestoLabels(p.Name)
+	replicas := p.Spec.Workers
+
+	dep := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      p.Name,
+			Namespace: p.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: ls,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: ls,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Image: p.Spec.Image.Repository + ":" + p.Spec.Image.Tag,
+						Name:  "presto",
+						Ports: []corev1.ContainerPort{{
+							ContainerPort: p.Spec.Config.HTTPPort,
+							Name:          "http-coord",
+						}},
+					}},
+				},
+			},
+		},
+	}
+	// Set Presto instance as the owner and controller
+	ctrl.SetControllerReference(p, dep, r.Scheme)
+	return dep
 }
