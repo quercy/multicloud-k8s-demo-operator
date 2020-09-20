@@ -11,9 +11,7 @@ spec:
   logLevel: INFO
   config:
     path: /usr/lib/presto/etc
-    http:
-      port: 8080
-    query:
+    httpPort: 8080
   maxMemory: "4GB"
   maxMemoryPerNode: "1GB"
   jvmConfig:

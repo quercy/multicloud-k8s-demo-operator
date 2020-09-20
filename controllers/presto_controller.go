@@ -22,10 +22,8 @@ import (
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -43,28 +41,28 @@ type PrestoReconciler struct {
 // +kubebuilder:rbac:groups=skittles.quercy.co,resources=prestoes/status,verbs=get;update;patch
 
 func (r *PrestoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
-	// _ = r.Log.WithValues("presto", req.NamespacedName)
+	_ = context.Background()
+	_ = r.Log.WithValues("presto", req.NamespacedName)
 
-	presto := &skittlesv1.Presto{}
-	err := r.Get(ctx, req.NamespacedName, presto)
-	found := &appsv1.Deployment{}
-	err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		// Define a new deployment
-		dep := r.deployPresto(presto)
-		// log.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-		err = r.Create(ctx, dep)
-		if err != nil {
-			// log.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-			return ctrl.Result{}, err
-		}
-		// Deployment created successfully - return and requeue
-		return ctrl.Result{Requeue: true}, nil
-	} else if err != nil {
-		// log.Error(err, "Failed to get Deployment")
-		return ctrl.Result{}, err
-	}
+	// presto := &skittlesv1.Presto{}
+	// err := r.Get(ctx, req.NamespacedName, presto)
+	// found := &appsv1.Deployment{}
+	// err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, found)
+	// if err != nil && errors.IsNotFound(err) {
+	// 	// Define a new deployment
+	// 	dep := r.deployPresto(presto)
+	// 	log.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+	// 	err = r.Create(ctx, dep)
+	// 	if err != nil {
+	// 		log.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+	// 		return ctrl.Result{}, err
+	// 	}
+	// 	// Deployment created successfully - return and requeue
+	// 	return ctrl.Result{Requeue: true}, nil
+	// } else if err != nil {
+	// 	log.Error(err, "Failed to get Deployment")
+	// 	return ctrl.Result{}, err
+	// }
 
 	return ctrl.Result{}, nil
 }

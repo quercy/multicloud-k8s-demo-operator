@@ -36,6 +36,18 @@ spec:
         spec:
           description: PrestoSpec defines the desired state of Presto
           properties:
+            config:
+              description: PrestoConfig defines the Presto config
+              properties:
+                httpPort:
+                  format: int32
+                  type: integer
+                path:
+                  type: string
+              required:
+              - httpPort
+              - path
+              type: object
             image:
               description: Image defines the Presto image to pull
               properties:
@@ -109,8 +121,10 @@ spec:
               - pluginDir
               type: object
             workers:
+              format: int32
               type: integer
           required:
+          - config
           - image
           - jvmConfig
           - logLevel
