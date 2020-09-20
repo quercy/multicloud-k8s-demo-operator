@@ -39,7 +39,7 @@ type DemoReconciler struct {
 
 func (r *DemoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("demo", req.NamespacedName)
+	// _ = r.Log.WithValues("demo", req.NamespacedName)
 
 	// your logic here
 

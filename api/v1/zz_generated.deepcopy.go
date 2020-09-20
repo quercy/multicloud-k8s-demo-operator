@@ -269,6 +269,7 @@ func (in *PrestoNode) DeepCopy() *PrestoNode {
 func (in *PrestoSpec) DeepCopyInto(out *PrestoSpec) {
 	*out = *in
 	out.Node = in.Node
+	out.Config = in.Config
 	out.JvmConfig = in.JvmConfig
 	out.Image = in.Image
 }
