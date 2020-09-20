@@ -3,5 +3,30 @@ kind: Presto
 metadata:
   name: presto-sample
 spec:
-  # Add fields here
-  foo: bar
+  workers: 2
+  node:
+    environment: production
+    dataDir: /data/presto
+    pluginDir: /usr/lib/presto/plugin
+  logLevel: INFO
+  config:
+    path: /usr/lib/presto/etc
+    http:
+      port: 8080
+    query:
+  maxMemory: "4GB"
+  maxMemoryPerNode: "1GB"
+  jvmConfig:
+    maxHeapSize: "8G"
+    gcMethod:
+      type: "UseG1GC"
+      g1:
+        heapRegionSize: "32M"
+  
+  image:
+    repository: prestosql/presto
+    tag: "329"
+    pullPolicy: IfNotPresent
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
