@@ -28,14 +28,62 @@ type PrestoSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Presto. Edit Presto_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Workers          int        `json:"workers"`
+	Node             PrestoNode `json:"node"`
+	LogLevel         string     `json:"logLevel"`
+	MaxMemory        string     `json:"maxMemory"`
+	MaxMemoryPerNode string     `json:"maxMemoryPerNode"`
+	JvmConfig        JvmConfig  `json:"jvmConfig"`
+	Image            Image      `json:"image"`
+}
+
+// Image defines the Presto image to pull
+type Image struct {
+	Repository      string          `json:"repository"`
+	Tag             string          `json:"tag"`
+	PullPolicy      string          `json:"pullPolicy"`
+	SecurityContext SecurityContext `json:"securityContext"`
+}
+
+// SecurityContext defines the SecurityContext
+type SecurityContext struct {
+	RunAsUser  int `json:"runAsUser"`
+	RunAsGroup int `json:"runAsGroup"`
+}
+
+// PrestoNode defines the Presto Node config
+type PrestoNode struct {
+	Environment string `json:"environment"`
+	DataDir     string `json:"dataDir"`
+	PluginDir   string `json:"pluginDir"`
+}
+
+// PrestoConfig defines the Presto config
+type PrestoConfig struct {
+	Path     string `json:"path"`
+	HTTPPort string `json:"httpPort"`
+}
+
+// JvmConfig configures the JVM
+type JvmConfig struct {
+	MaxHeapSize string   `json:"maxHeapSize"`
+	GcMethod    GcMethod `json:"gcMethod"`
+}
+
+// GcMethod defines the garbage collection method
+type GcMethod struct {
+	Type string `json:"type"`
+	G1   G1     `json:"g1"`
+}
+
+// G1 does something
+type G1 struct {
+	HeapRegionSize string `json:"heapRegionSize"`
 }
 
 // PrestoStatus defines the observed state of Presto
 type PrestoStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Controller string `json:"controller,omitempty"`
 }
 
 // +kubebuilder:object:root=true
