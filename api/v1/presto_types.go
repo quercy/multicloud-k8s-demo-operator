@@ -84,7 +84,8 @@ type G1 struct {
 
 // PrestoStatus defines the observed state of Presto
 type PrestoStatus struct {
-	Controller string `json:"controller,omitempty"`
+	Controller string   `json:"controller,omitempty"`
+	Nodes      []string `json:"nodes"`
 }
 
 // +kubebuilder:object:root=true

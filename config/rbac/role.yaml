@@ -7,9 +7,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - skittles.quercy.co
+  - apps
   resources:
-  - prestoes
+  - deployments
   verbs:
   - create
   - delete
@@ -19,13 +19,19 @@ rules:
   - update
   - watch
 - apiGroups:
-  - skittles.quercy.co
+  - ""
   resources:
-  - prestoes/status
+  - deployments
   verbs:
   - get
-  - patch
-  - update
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -35,6 +41,18 @@ metadata:
   name: manager-role
   namespace: multicloud-k8s-demo-operator-system
 rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - skittles.quercy.co
   resources:
@@ -51,6 +69,26 @@ rules:
   - skittles.quercy.co
   resources:
   - demoes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - skittles.quercy.co
+  resources:
+  - prestoes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - skittles.quercy.co
+  resources:
+  - prestoes/status
   verbs:
   - get
   - patch

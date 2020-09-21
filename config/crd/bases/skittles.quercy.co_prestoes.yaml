@@ -138,6 +138,12 @@ spec:
           properties:
             controller:
               type: string
+            nodes:
+              items:
+                type: string
+              type: array
+          required:
+          - nodes
           type: object
       type: object
   version: v1

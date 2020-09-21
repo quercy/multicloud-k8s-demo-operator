@@ -18,12 +18,15 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,36 +40,97 @@ type PrestoReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=skittles.quercy.co,resources=prestoes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=skittles.quercy.co,resources=prestoes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=skittles.quercy.co,namespace=multicloud-k8s-demo-operator-system,resources=prestoes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=skittles.quercy.co,namespace=multicloud-k8s-demo-operator-system,resources=prestoes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,namespace=multicloud-k8s-demo-operator-system,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
+// +kubebuilder:rbac:groups=core,resources=deployments,verbs=get;list;
 
 func (r *PrestoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("presto", req.NamespacedName)
+	ctx := context.Background()
+	log := r.Log.WithValues("presto", req.NamespacedName)
+	presto := &skittlesv1.Presto{}
+	err := r.Get(ctx, req.NamespacedName, presto)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			log.Info("Presto resource not found. Ignoring since object must be deleted")
+			return ctrl.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		log.Error(err, "Failed to get Presto")
+		return ctrl.Result{}, err
+	}
 
-	// presto := &skittlesv1.Presto{}
-	// err := r.Get(ctx, req.NamespacedName, presto)
-	// found := &appsv1.Deployment{}
-	// err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, found)
-	// if err != nil && errors.IsNotFound(err) {
-	// 	// Define a new deployment
-	// 	dep := r.deployPresto(presto)
-	// 	log.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-	// 	err = r.Create(ctx, dep)
-	// 	if err != nil {
-	// 		log.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-	// 		return ctrl.Result{}, err
-	// 	}
-	// 	// Deployment created successfully - return and requeue
-	// 	return ctrl.Result{Requeue: true}, nil
-	// } else if err != nil {
-	// 	log.Error(err, "Failed to get Deployment")
-	// 	return ctrl.Result{}, err
-	// }
+	// Check if the deployment already exists, if not create a new one
+	found := &appsv1.Deployment{}
+	err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new deployment
+		dep := r.deployPresto(presto)
+		log.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+		err = r.Create(ctx, dep)
+		if err != nil {
+			log.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+			return ctrl.Result{}, err
+		}
+		// Deployment created successfully - return and requeue
+		return ctrl.Result{Requeue: true}, nil
+	} else if err != nil {
+		log.Error(err, "Failed to get Deployment")
+		return ctrl.Result{}, err
+	}
+
+	// Ensure the deployment size is the same as the spec
+	size := presto.Spec.Workers
+	if *found.Spec.Replicas != size {
+		found.Spec.Replicas = &size
+		err = r.Update(ctx, found)
+		if err != nil {
+			log.Error(err, "Failed to update Deployment", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+			return ctrl.Result{}, err
+		}
+		// Spec updated - return and requeue
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	// Update the Memcached status with the pod names
+	// List the pods for this memcached's deployment
+	podList := &corev1.PodList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(presto.Namespace),
+		client.MatchingLabels(getPrestoLabels(presto.Name)),
+	}
+	if err = r.List(ctx, podList, listOpts...); err != nil {
+		log.Error(err, "Failed to list pods", "Presto.Namespace", presto.Namespace, "Presto.Name", presto.Name)
+		return ctrl.Result{}, err
+	}
+	podNames := getPodNames(podList.Items)
+
+	// Update status.Nodes if needed
+	if !reflect.DeepEqual(podNames, presto.Status.Nodes) {
+		presto.Status.Nodes = podNames
+		err := r.Status().Update(ctx, presto)
+		if err != nil {
+			log.Error(err, "Failed to update Memcached status")
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }
 
+// getPodNames returns the pod names of the array of pods passed in
+func getPodNames(pods []corev1.Pod) []string {
+	var podNames []string
+	for _, pod := range pods {
+		podNames = append(podNames, pod.Name)
+	}
+	return podNames
+}
 func (r *PrestoReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&skittlesv1.Presto{}).
