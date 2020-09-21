@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -40,12 +41,18 @@ type PrestoReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// func ensureDeployment(log logr.Logger, presto skittlesv1.Presto) {
+
+// }
+
 // +kubebuilder:rbac:groups=skittles.quercy.co,namespace=multicloud-k8s-demo-operator-system,resources=prestoes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=skittles.quercy.co,namespace=multicloud-k8s-demo-operator-system,resources=prestoes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,namespace=multicloud-k8s-demo-operator-system,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
 // +kubebuilder:rbac:groups=core,resources=deployments,verbs=get;list;
+// +kubebuilder:rbac:groups=core,namespace=multicloud-k8s-demo-operator-system,resources=pods,verbs=get;list;
+// +kubebuilder:rbac:groups=core,namespace=multicloud-k8s-demo-operator-system,resources=services,verbs=get;list;watch;create;update;patch;delete
 
 func (r *PrestoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
@@ -66,8 +73,8 @@ func (r *PrestoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// Check if the deployment already exists, if not create a new one
-	found := &appsv1.Deployment{}
-	err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, found)
+	deployment := &appsv1.Deployment{}
+	err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, deployment)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new deployment
 		dep := r.deployPresto(presto)
@@ -86,19 +93,38 @@ func (r *PrestoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Ensure the deployment size is the same as the spec
 	size := presto.Spec.Workers
-	if *found.Spec.Replicas != size {
-		found.Spec.Replicas = &size
-		err = r.Update(ctx, found)
+	if *deployment.Spec.Replicas != size {
+		deployment.Spec.Replicas = &size
+		err = r.Update(ctx, deployment)
 		if err != nil {
-			log.Error(err, "Failed to update Deployment", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+			log.Error(err, "Failed to update Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 			return ctrl.Result{}, err
 		}
 		// Spec updated - return and requeue
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	// Update the Memcached status with the pod names
-	// List the pods for this memcached's deployment
+	// Check if the service already exists, if not create a new one
+	service := &corev1.Service{}
+	err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, service)
+	if err != nil && errors.IsNotFound(err) {
+		// Define a new deployment
+		dep := r.deployPrestoService(presto)
+		log.Info("Creating a new Service", "Service.Namespace", dep.Namespace, "Service.Name", dep.Name)
+		err = r.Create(ctx, dep)
+		if err != nil {
+			log.Error(err, "Failed to create new Service", "Service.Namespace", dep.Namespace, "Service.Name", dep.Name)
+			return ctrl.Result{}, err
+		}
+		// Service created successfully - return and requeue
+		return ctrl.Result{Requeue: true}, nil
+	} else if err != nil {
+		log.Error(err, "Failed to get Service")
+		return ctrl.Result{}, err
+	}
+
+	// Update the Presto status with the pod names
+	// List the pods for this Presto's deployment
 	podList := &corev1.PodList{}
 	listOpts := []client.ListOption{
 		client.InNamespace(presto.Namespace),
@@ -115,7 +141,7 @@ func (r *PrestoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		presto.Status.Nodes = podNames
 		err := r.Status().Update(ctx, presto)
 		if err != nil {
-			log.Error(err, "Failed to update Memcached status")
+			log.Error(err, "Failed to update Presto status")
 			return ctrl.Result{}, err
 		}
 	}
@@ -170,6 +196,31 @@ func (r *PrestoReconciler) deployPresto(p *skittlesv1.Presto) *appsv1.Deployment
 					}},
 				},
 			},
+		},
+	}
+	// Set Presto instance as the owner and controller
+	ctrl.SetControllerReference(p, dep, r.Scheme)
+	return dep
+}
+
+func (r *PrestoReconciler) deployPrestoService(p *skittlesv1.Presto) *corev1.Service {
+	ls := getPrestoLabels(p.Name)
+
+	dep := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      p.Name,
+			Namespace: p.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			// Type: "ClusterIp",
+			Ports: []corev1.ServicePort{
+				{
+					TargetPort: intstr.IntOrString{IntVal: p.Spec.Config.HTTPPort},
+					Protocol:   corev1.ProtocolTCP,
+					Port:       p.Spec.Config.HTTPPort,
+				},
+			},
+			Selector: ls,
 		},
 	}
 	// Set Presto instance as the owner and controller
