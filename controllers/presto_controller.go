@@ -47,12 +47,9 @@ type PrestoReconciler struct {
 
 // +kubebuilder:rbac:groups=skittles.quercy.co,namespace=multicloud-k8s-demo-operator-system,resources=prestoes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=skittles.quercy.co,namespace=multicloud-k8s-demo-operator-system,resources=prestoes/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,namespace=multicloud-k8s-demo-operator-system,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
-// +kubebuilder:rbac:groups=core,resources=deployments,verbs=get;list;
-// +kubebuilder:rbac:groups=core,namespace=multicloud-k8s-demo-operator-system,resources=pods,verbs=get;list;
 // +kubebuilder:rbac:groups=core,namespace=multicloud-k8s-demo-operator-system,resources=services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,namespace=multicloud-k8s-demo-operator-system,resources=pods,verbs=get;list;watch
 
 func (r *PrestoReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
