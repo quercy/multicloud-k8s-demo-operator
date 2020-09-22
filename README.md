@@ -2,7 +2,9 @@
 
 This is a Kubernetes Operator that uses the Golang [Operator SDK](https://sdk.operatorframework.io/) to create a deployment and service that hosts a [Presto Coordinator](https://prestodb.io/docs/current/overview/concepts.html#:~:text=The%20Presto%20coordinator%20is%20the,to%20submit%20statements%20for%20execution.), based on the [Presto Helm chart](https://github.com/helm/charts/tree/master/stable/presto) (but not using Helm). The fictional company that is hosting this operator is `skittles`, so the API group is named `skittlesv1`.
 
-This is not currently a polished tool, and is only for reference purposes.
+This is not currently a polished tool, and is only for reference purposes. 
+
+The reconiciliation logic was based on the [Memcached example](https://github.com/operator-framework/operator-sdk-samples/tree/master/go/memcached-operator) from the Operator SDK docs.
 
 Don't edit the files in `config` directly; most of them are managed by the Operator SDK.
 
