@@ -102,6 +102,7 @@ func getPodNames(pods []corev1.Pod) []string {
 	}
 	return podNames
 }
+
 func (r *PrestoReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&skittlesv1.Presto{}).

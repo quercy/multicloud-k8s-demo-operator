@@ -20,7 +20,7 @@ func (r *PrestoReconciler) ensureCoordinator(ctx context.Context, presto *skittl
 	err := r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, deployment)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new deployment
-		dep := r.createCoordinator(presto)
+		dep := r.createCoordinatorDeployment(presto)
 		// Set Presto instance as the owner and controller
 		ctrl.SetControllerReference(presto, dep, r.Scheme)
 		err = r.Create(ctx, dep)
@@ -53,7 +53,7 @@ func (r *PrestoReconciler) ensureCoordinator(ctx context.Context, presto *skittl
 	err = r.Get(ctx, types.NamespacedName{Name: presto.Name, Namespace: presto.Namespace}, service)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new deployment
-		dep := r.deployPrestoService(presto)
+		dep := r.createCoordinatorService(presto)
 		// Set Presto instance as the owner and controller
 		ctrl.SetControllerReference(presto, dep, r.Scheme)
 		log.Info("Creating a new Service", "Service.Namespace", dep.Namespace, "Service.Name", dep.Name)
@@ -72,7 +72,7 @@ func (r *PrestoReconciler) ensureCoordinator(ctx context.Context, presto *skittl
 	return ctrl.Result{}, nil
 }
 
-func (r *PrestoReconciler) createCoordinator(p *skittlesv1.Presto) *appsv1.Deployment {
+func (r *PrestoReconciler) createCoordinatorDeployment(p *skittlesv1.Presto) *appsv1.Deployment {
 	log.Info("Creating a new Deployment", "Deployment.Namespace", p.Namespace, "Deployment.Name", p.Name)
 	ls := getPrestoLabels(p.Name)
 	replicas := p.Spec.Workers
@@ -107,7 +107,7 @@ func (r *PrestoReconciler) createCoordinator(p *skittlesv1.Presto) *appsv1.Deplo
 	return dep
 }
 
-func (r *PrestoReconciler) deployPrestoService(p *skittlesv1.Presto) *corev1.Service {
+func (r *PrestoReconciler) createCoordinatorService(p *skittlesv1.Presto) *corev1.Service {
 	ls := getPrestoLabels(p.Name)
 
 	dep := &corev1.Service{
